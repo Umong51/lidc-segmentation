@@ -9,8 +9,9 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class CFG:
-    num_samples = 4
-    spatial_size = (16, 16, 16)
+    num_samples = 16
+    spatial_size = (64, 64, 64)
+    mask_thresh = 16
 
 
 class Ct:
@@ -38,6 +39,8 @@ class Ct:
 
         for nod in nodules:
             nod_mask, nod_bbox, nod_masks = consensus(nod, pad=512)
+            if nod_mask.sum() < CFG.mask_thresh:
+                continue
             mask |= nod_mask
 
         vol = vol.astype(np.float32)
@@ -71,3 +74,23 @@ class LIDCDataset(Dataset):
 
         scan = self.scans[scan_idx]
         return get_ct(scan).samples[sample_idx]
+
+
+def get_loaders():
+    scans = pl.query(pl.Scan).all()
+    train_scans = []
+    val_scans = []
+
+    for i, scan in enumerate(scans):
+        if i % 5 == 0:
+            val_scans.append(scan)
+        else:
+            train_scans.append(scan)
+
+    train_ds = LIDCDataset(train_scans)
+    val_ds = LIDCDataset(val_scans)
+
+    train_loader = DataLoader(train_ds, batch_size=8)
+    val_loader = DataLoader(val_ds, batch_size=8)
+
+    return train_loader, val_loader
