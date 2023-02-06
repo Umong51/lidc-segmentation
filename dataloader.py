@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, Dataset
 
 class CFG:
     num_samples = 4
+    spatial_size = (16, 16, 16)
 
 
 class Ct:
@@ -22,7 +23,7 @@ class Ct:
                 pos=7,
                 neg=3,
                 num_samples=CFG.num_samples,
-                spatial_size=(16, 16, 16),
+                spatial_size=CFG.spatial_size,
             ),
         ]
     )
